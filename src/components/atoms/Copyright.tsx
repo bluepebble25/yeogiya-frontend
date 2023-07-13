@@ -1,4 +1,6 @@
-import { Link, Typography } from '@mui/material';
+import { css } from '@emotion/react';
+import { Typography } from '@mui/material';
+import { Link } from 'react-router-dom';
 
 function Copyright(props: any) {
   return (
@@ -7,15 +9,21 @@ function Copyright(props: any) {
       color="text.secondary"
       align="center"
       {...props}
+      maxWidth="500px"
     >
       {'Copyright © '}
-      <Link color="inherit" href="">
+      <Link to="/" css={LinkStyle}>
         여기야
-      </Link>{' '}
+      </Link>
       {new Date().getFullYear()}
       {'.'}
     </Typography>
   );
 }
+
+const LinkStyle = css`
+  color: inherit;
+  margin-right: 4px;
+`;
 
 export default Copyright;

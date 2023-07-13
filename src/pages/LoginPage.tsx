@@ -1,93 +1,118 @@
-import * as React from 'react';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import { Container, Checkbox, Link, Grid, Box, Typography } from '@mui/material';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Copyright from '../components/atoms/Copyright'
+import React, { useState } from 'react';
+import { css } from '@emotion/react';
+import { Link } from 'react-router-dom';
 
-const defaultTheme = createTheme();
+import {
+  Container,
+  Grid,
+  Box,
+  FormControlLabel,
+  Checkbox,
+} from '@mui/material';
+
+import Logo from '../components/atoms/Logo';
+import LoginInputFields from '../components/blocks/LoginInputFields';
+import SubLinks from '../components/blocks/SubLinks';
+import PrimaryButton from '../components/atoms/PrimaryButton';
+import SocialLoginButton from '../components/atoms/SocialLoginButton';
+import Copyright from '../components/atoms/Copyright';
 
 export default function SignIn() {
+  const [loginInfo, setLoginInfo] = useState({ id: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleOnChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginInfo({ ...loginInfo, [name]: value });
+  };
+
+  const handleDeleteId = () => {
+    setLoginInfo({ ...loginInfo, id: '' });
+  };
+
+  const handleClickShowPassword = () => setShowPassword((show) => !show);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     console.log({
-      email: data.get('email'),
+      id: data.get('id'),
       password: data.get('password'),
     });
   };
 
   return (
-    <ThemeProvider theme={defaultTheme}>
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
+    <Container component="main" maxWidth="sm">
+      <Box css={loginWrapperStyle}>
+        <Link to="/">
+          <Logo height="50px" />
+        </Link>
+
         <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
+          component="form"
+          onSubmit={handleSubmit}
+          noValidate
+          sx={{ display: 'flex', flexDirection: 'column', mt: 4, gap: 2 }}
         >
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            로그인
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="이메일"
-              name="email"
-              autoComplete="email"
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="비밀번호"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
+          <LoginInputFields
+            loginInfo={loginInfo}
+            showPassword={showPassword}
+            handleOnChangeInput={handleOnChangeInput}
+            handleDeleteId={handleDeleteId}
+            handleClickShowPassword={handleClickShowPassword}
+          />
+          <Grid item xs={12}>
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="로그인 유지"
+              control={
+                <Checkbox
+                  name="remember"
+                  value="remember"
+                  color="primary"
+                  sx={{ padding: '0 9px' }}
+                />
+              }
+              label="아이디 저장"
+              sx={{ mt: -1 }}
             />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              로그인
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  비밀번호 찾기
-                </Link>
-              </Grid>
-              <Grid item>
-                <Link href="#" variant="body2">
-                  회원가입 하기
-                </Link>
-              </Grid>
-            </Grid>
+          </Grid>
+          <PrimaryButton>로그인</PrimaryButton>
+          <SubLinks
+            data={[
+              { title: '아이디 찾기', link: '/login#' },
+              { title: '비밀번호 찾기', link: '/login#' },
+              { title: '회원가입 하기', link: '/register' },
+            ]}
+          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <SocialLoginButton
+              text="구글로 로그인"
+              imgUrl="img/g_logo.png"
+              to="/login#"
+              bgColor="white"
+              hasBorder
+            />
+            <SocialLoginButton
+              text="카카오 로그인"
+              imgUrl="img/kakao_logo.svg"
+              to="/login#"
+              bgColor="#FEE500"
+            />
           </Box>
         </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
-      </Container>
-    </ThemeProvider>
+      </Box>
+      <Copyright sx={{ mt: 8, mb: 4 }} />
+    </Container>
   );
 }
+
+const loginWrapperStyle = css`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 500px;
+  padding: 50px;
+  margin-top: 64px;
+  border: solid 1px #dcdcdc;
+  border-radius: 24px;
+}
+`;
