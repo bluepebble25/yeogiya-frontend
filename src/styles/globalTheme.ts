@@ -12,4 +12,14 @@ export const globalTheme = createTheme({
       main: '#FF9B3F', // 주황색
     },
   },
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'white',
+          boxShadow: 'none',
+        },
+      },
+    },
+  },
 });
