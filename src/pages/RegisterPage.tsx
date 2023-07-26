@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { css } from '@emotion/react';
 import {
   Container,
@@ -20,30 +20,42 @@ import PrimaryButton from '../components/atoms/PrimaryButton';
 import SimpleSocialLoginButton from '../components/atoms/SimpleSocialLoginButton';
 import { Controller, useForm } from 'react-hook-form';
 
-export default function RegisterPage() {
-  interface SignUpFormValues {
-    id: string;
-    password: string;
-    nickname: string;
-    email: string;
-  }
+interface SignUpFormValues {
+  id: string;
+  password: string;
+  nickname: string;
+  email: string;
+}
 
+type Agreements = {
+  [key: string]: boolean;
+};
+
+export default function RegisterPage() {
   const {
     control,
     handleSubmit,
     getValues,
     trigger,
     formState: { errors, isValid },
-  } = useForm<SignUpFormValues>();
+  } = useForm<SignUpFormValues>({
+    mode: 'onChange',
+  });
 
   const [showPassword, setShowPassword] = useState(false);
-
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
+  // id, nickname 검사 완료 및 사용가능 여부
   const [isIdAvailable, setIsIdAvailable] = useState(false);
   const [idCheckCompleted, setIdCheckCompleted] = useState(false);
   const [isNicknameAvailable, setIsNicknameAvailable] = useState(false);
   const [nicknameCheckCompleted, setNicknameCheckCompleted] = useState(false);
+  // 약관 동의
+  const [allCheck, setAllCheck] = useState(false);
+  const [agreements, setAgreements] = useState<Agreements>({
+    allowAge: false,
+    allowPrivacy: false,
+  });
 
   const onSubmit = (data: SignUpFormValues) => {
     //
@@ -79,6 +91,29 @@ export default function RegisterPage() {
         alert(`Error during nickname duplication check: ${error}`);
       }
     }
+  };
+
+  const handleUpdateAllAgree = () => {
+    // agreements 돌며 각 property 변경
+    const newAgreements: Agreements = {};
+    for (const key in agreements) {
+      newAgreements[key] = !allCheck;
+    }
+    setAllCheck((prevState) => !prevState);
+    setAgreements(newAgreements);
+  };
+
+  const handleUpdateAgreement = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setAgreements({ ...agreements, [name]: checked });
+
+    // 모든 동의사항이 체크되어있는지 확인해 체크되어 있다면 전체 항목도 체크
+    const allAgreementsChecked = Object.values({
+      ...agreements,
+      [name]: checked,
+    }).every((value) => value);
+
+    setAllCheck(allAgreementsChecked);
   };
 
   return (
@@ -129,7 +164,7 @@ export default function RegisterPage() {
                   setIsIdAvailable(false);
                   setIdCheckCompleted(false);
                 }}
-                error={!!errors.id || (!isIdAvailable && idCheckCompleted)} // id 제한사항에 통과 못했거나 id 중복 검사를 수행해서 사용불가라고 했을 때 빨간색 경고
+                error={!!errors.id || (!isIdAvailable && idCheckCompleted)} // id 제한사항에 통과 못했거나 id 중복 검사 결과 사용불가일 때도 error
                 helperText={
                   errors?.id
                     ? errors.id.message // ID 유효성 검사 에러 메시지 표시
@@ -181,10 +216,6 @@ export default function RegisterPage() {
                       </IconButton>
                     </InputAdornment>
                   ),
-                }}
-                onChange={(e) => {
-                  field.onChange(e); // 필드의 값을 변경
-                  trigger('password'); // 입력 값이 변경될 때마다 password 필드의 값을 검사
                 }}
                 error={Boolean(errors?.password)}
                 helperText={errors?.password?.message || ''}
@@ -254,10 +285,6 @@ export default function RegisterPage() {
                 fullWidth
                 variant="outlined"
                 placeholder="example@email.com"
-                onChange={(e) => {
-                  field.onChange(e); // 필드의 값을 변경
-                  trigger('email'); // 입력 값이 변경될 때마다 email 필드의 값을 검사
-                }}
                 error={!!errors.email}
                 helperText={errors.email && errors.email.message}
               />
@@ -265,25 +292,54 @@ export default function RegisterPage() {
           />
           <Box display="flex" flexDirection="column" mt={2}>
             <Typography mb={1}>약관 동의</Typography>
-            <Divider sx={{ width: '100%' }} />
             <FormControlLabel
-              control={<Checkbox value="allowAll" color="primary" />}
+              control={
+                <Checkbox
+                  checked={allCheck}
+                  value="allowAll"
+                  color="primary"
+                  onChange={handleUpdateAllAgree}
+                />
+              }
               label="모두 동의합니다."
             />
+            <Divider sx={{ width: '100%' }} />
 
             <FormControlLabel
-              control={<Checkbox value="allowAge" color="primary" />}
+              control={
+                <Checkbox
+                  name="allowAge"
+                  checked={agreements.allowAge}
+                  value="allowAge"
+                  color="primary"
+                  onChange={handleUpdateAgreement}
+                />
+              }
               label="만 14세 이상입니다. (필수)"
             />
             <FormControlLabel
-              control={<Checkbox value="allowPersonalInfo" color="primary" />}
+              control={
+                <Checkbox
+                  name="allowPrivacy"
+                  checked={agreements.allowPrivacy}
+                  value="allowPrivacy"
+                  color="primary"
+                  onChange={handleUpdateAgreement}
+                />
+              }
               label="개인정보 수집에 동의합니다. (필수)"
             />
           </Box>
 
           {/* 회원가입 버튼 */}
           <PrimaryButton
-            isDisabled={!isValid || !isIdAvailable || !isNicknameAvailable}
+            isDisabled={
+              !isValid ||
+              !isIdAvailable ||
+              !isNicknameAvailable ||
+              !agreements.allowAge ||
+              !agreements.allowPrivacy
+            }
           >
             가입하기
           </PrimaryButton>
