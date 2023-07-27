@@ -1,43 +1,119 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { css } from '@emotion/react';
 import {
   Container,
-  Grid,
   Box,
-  Button,
-  TextField,
   Link,
   Typography,
-  FormControl,
-  MenuItem,
-  Select,
   Divider,
+  TextField,
+  InputAdornment,
+  IconButton,
 } from '@mui/material';
-
+import { Visibility, VisibilityOff } from '@mui/icons-material';
+import Logo from '../components/atoms/Logo';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import InputLabel from '@mui/material/InputLabel';
 import { Link as RouterLink } from 'react-router-dom';
-
-import { IconButton, InputAdornment } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
 import Copyright from '../components/atoms/Copyright';
-import Logo from '../components/atoms/Logo';
 import PrimaryButton from '../components/atoms/PrimaryButton';
 import SimpleSocialLoginButton from '../components/atoms/SimpleSocialLoginButton';
+import { Controller, useForm } from 'react-hook-form';
 
-export default function SignUp() {
+interface SignUpFormValues {
+  id: string;
+  password: string;
+  nickname: string;
+  email: string;
+}
+
+type Agreements = {
+  [key: string]: boolean;
+};
+
+export default function RegisterPage() {
+  const {
+    control,
+    handleSubmit,
+    getValues,
+    trigger,
+    formState: { errors, isValid },
+  } = useForm<SignUpFormValues>({
+    mode: 'onChange',
+  });
+
   const [showPassword, setShowPassword] = useState(false);
-
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+  // id, nickname 검사 완료 및 사용가능 여부
+  const [isIdAvailable, setIsIdAvailable] = useState(false);
+  const [idCheckCompleted, setIdCheckCompleted] = useState(false);
+  const [isNicknameAvailable, setIsNicknameAvailable] = useState(false);
+  const [nicknameCheckCompleted, setNicknameCheckCompleted] = useState(false);
+  // 약관 동의
+  const [allCheck, setAllCheck] = useState(false);
+  const [agreements, setAgreements] = useState<Agreements>({
+    allowAge: false,
+    allowPrivacy: false,
+  });
+
+  const onSubmit = (data: SignUpFormValues) => {
+    //
+  };
+
+  const handleIdBlur = async () => {
+    const value = getValues('id'); // 아이디 필드의 입력값 가져오기
+    if (value) {
+      try {
+        // Axios를 사용하여 중복검사 API 호출
+        // const response = await axios.post('/api/checkDuplicateId', { id: value });
+        // const isValid = response.data.isAvailable; // API에서 중복검사 결과를 받아옴
+        // setIsIdAvailable(isValid); // 유효성 검사 결과에 따라 상태 변경
+        setIsIdAvailable(true);
+        setIdCheckCompleted(true);
+      } catch (error) {
+        alert(`Error during id duplication check: ${error}`);
+      }
+    }
+  };
+
+  const handleNicknameBlur = async () => {
+    const value = getValues('nickname');
+    if (value) {
+      try {
+        // Axios를 사용하여 닉네임 중복검사 API 호출
+        // const response = await axios.post('/api/checkDuplicateNickname', { nickname: value });
+        // const isValid = response.data.isAvailable; // API에서 중복검사 결과를 받아옴
+        // setIsNicknameAvailable(isValid);
+        setIsNicknameAvailable(true);
+        setNicknameCheckCompleted(true);
+      } catch (error) {
+        alert(`Error during nickname duplication check: ${error}`);
+      }
+    }
+  };
+
+  const handleUpdateAllAgree = () => {
+    // agreements 돌며 각 property 변경
+    const newAgreements: Agreements = {};
+    for (const key in agreements) {
+      newAgreements[key] = !allCheck;
+    }
+    setAllCheck((prevState) => !prevState);
+    setAgreements(newAgreements);
+  };
+
+  const handleUpdateAgreement = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    setAgreements({ ...agreements, [name]: checked });
+
+    // 모든 동의사항이 체크되어있는지 확인해 체크되어 있다면 전체 항목도 체크
+    const allAgreementsChecked = Object.values({
+      ...agreements,
+      [name]: checked,
+    }).every((value) => value);
+
+    setAllCheck(allAgreementsChecked);
   };
 
   return (
@@ -51,7 +127,7 @@ export default function SignUp() {
         <Box
           component="form"
           noValidate
-          onSubmit={handleSubmit}
+          onSubmit={handleSubmit(onSubmit)}
           sx={{
             display: 'flex',
             flexDirection: 'column',
@@ -60,140 +136,215 @@ export default function SignUp() {
             pb: 5,
           }}
         >
-          <TextField
-            id="name"
-            name="name"
-            label="이름"
-            inputProps={{ maxLength: 12 }}
-            required
-            autoComplete="name"
-            fullWidth
-          />
-          <Grid container spacing={2}>
-            <Grid item xs={8} sm={9}>
-              <TextField
-                id="id"
-                name="id"
-                label="아이디"
-                inputProps={{ maxLength: 12 }}
-                required
-                autoComplete="id"
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={4} sm={3}>
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                sx={{
-                  py: '14px',
-                  px: '12px',
-                  borderRadius: '8px',
-                  my: 'auto',
-                }}
-                onClick={() => {}}
-              >
-                <Typography color={'white'}>중복확인</Typography>
-              </Button>
-            </Grid>
-          </Grid>
-          <TextField
-            id="password"
-            name="password"
-            label="비밀번호"
-            required
-            fullWidth
-            type={showPassword ? 'text' : 'password'}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+          {/* id input */}
+          <Controller
+            name="id"
+            control={control}
+            defaultValue=""
+            rules={{
+              required: 'ID를 입력해주세요.',
+              pattern: {
+                value: /^[a-zA-Z0-9_-]{5,20}$/,
+                message:
+                  'ID는 5~20자의 영문 대소문자, 숫자, 특수문자(-, _)만 사용 가능합니다.',
+              },
             }}
-            autoComplete="new-password"
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="아이디"
+                required
+                fullWidth
+                variant="outlined"
+                inputProps={{ maxLength: 20 }}
+                onBlur={handleIdBlur}
+                onChange={(e) => {
+                  field.onChange(e); // 필드의 값을 변경
+                  trigger('id'); // 입력 값이 변경될 때마다 id 필드의 값을 검사
+                  setIsIdAvailable(false);
+                  setIdCheckCompleted(false);
+                }}
+                error={!!errors.id || (!isIdAvailable && idCheckCompleted)} // id 제한사항에 통과 못했거나 id 중복 검사 결과 사용불가일 때도 error
+                helperText={
+                  errors?.id
+                    ? errors.id.message // ID 유효성 검사 에러 메시지 표시
+                    : idCheckCompleted && isIdAvailable
+                    ? '사용 가능한 아이디입니다.'
+                    : idCheckCompleted && !isIdAvailable // 사용 가능한 경우 메시지 표시
+                    ? '이미 사용중인 아이디입니다.' // 이미 사용중인 경우 메시지 표시
+                    : ''
+                }
+              />
+            )}
           />
-          <TextField
-            id="email"
-            name="email"
-            label="이메일"
-            inputProps={{ maxLength: 320 }}
-            required
-            fullWidth
-            autoComplete="email"
-            placeholder="example@email.com"
+          {/* password input */}
+          <Controller
+            name="password"
+            control={control}
+            defaultValue=""
+            rules={{
+              required: '비밀번호를 입력해주세요.',
+              minLength: {
+                value: 8,
+                message:
+                  '8~20자의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
+              },
+              pattern: {
+                value: /^[a-zA-Z\d!"#$%&'()*+,\-./:;<=>?@[₩[\]^_`{|}~]{8,20}$/,
+                message:
+                  '8~20자의 영문 대/소문자, 숫자, 특수문자를 사용해 주세요.',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                type={showPassword ? 'text' : 'password'}
+                label="비밀번호"
+                required
+                fullWidth
+                variant="outlined"
+                inputProps={{ maxLength: 20 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle password visibility"
+                        onClick={handleClickShowPassword}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                error={Boolean(errors?.password)}
+                helperText={errors?.password?.message || ''}
+              />
+            )}
           />
-          <TextField
-            id="mobile_no"
-            name="mobile_no"
-            label="전화번호"
-            inputProps={{ maxLength: 12 }}
-            required
-            fullWidth
-            autoComplete="mobile_no"
-            placeholder="'-' 없이 입력"
-          />
-          <TextField
-            id="nickname"
+          {/* 닉네임 input */}
+          <Controller
             name="nickname"
-            label="닉네임"
-            inputProps={{ maxLength: 12 }}
-            autoComplete="nickname"
-            required
-            fullWidth
+            control={control}
+            defaultValue=""
+            rules={{
+              required: '닉네임을 입력해주세요. (최대 20자)',
+              maxLength: {
+                value: 20,
+                message: '닉네임은 20자 이하여야 합니다.',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="닉네임"
+                required
+                fullWidth
+                variant="outlined"
+                inputProps={{ maxLength: 20 }}
+                onBlur={handleNicknameBlur}
+                onChange={(e) => {
+                  field.onChange(e);
+                  setIsNicknameAvailable(false);
+                  setNicknameCheckCompleted(false);
+                }}
+                error={
+                  !!errors.nickname ||
+                  (!isNicknameAvailable && nicknameCheckCompleted)
+                }
+                helperText={
+                  errors?.nickname
+                    ? errors.nickname.message
+                    : nicknameCheckCompleted && isNicknameAvailable
+                    ? '사용 가능한 닉네임입니다.'
+                    : nicknameCheckCompleted && !isNicknameAvailable
+                    ? '이미 사용중인 닉네임입니다.'
+                    : ''
+                }
+              />
+            )}
           />
-
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={5}>
-              <FormControl sx={{ width: '100%' }}>
-                <InputLabel id="">광역시/도</InputLabel>
-                <Select labelId="" id="" value="" label="" onChange={() => {}}>
-                  <MenuItem value="서울특별시">
-                    <em>서울</em>
-                  </MenuItem>
-                  <MenuItem value="인천광역시">인천</MenuItem>
-                  <MenuItem value="경기도">경기</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={7}>
-              <FormControl sx={{ width: '100%' }}>
-                <InputLabel id="">시/구</InputLabel>
-                <Select labelId="" id="" value="" label="" onChange={() => {}}>
-                  <MenuItem value="강남구">
-                    <em>강남구</em>
-                  </MenuItem>
-                  <MenuItem value="마포구">마포구</MenuItem>
-                  <MenuItem value="용산구">용산구</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-
+          {/* 이메일 input */}
+          <Controller
+            name="email"
+            control={control}
+            defaultValue=""
+            rules={{
+              required: '이메일을 입력해주세요.',
+              pattern: {
+                value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+                message:
+                  '유효한 이메일 주소를 입력해주세요. 예) example@email.com',
+              },
+            }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="이메일"
+                required
+                fullWidth
+                variant="outlined"
+                placeholder="example@email.com"
+                error={!!errors.email}
+                helperText={errors.email && errors.email.message}
+              />
+            )}
+          />
           <Box display="flex" flexDirection="column" mt={2}>
-            <Typography mb={1}>가입 약관</Typography>
+            <Typography mb={1}>약관 동의</Typography>
             <FormControlLabel
-              control={<Checkbox value="allowAll" color="primary" />}
-              label="전체 동의"
+              control={
+                <Checkbox
+                  checked={allCheck}
+                  value="allowAll"
+                  color="primary"
+                  onChange={handleUpdateAllAgree}
+                />
+              }
+              label="모두 동의합니다."
             />
+            <Divider sx={{ width: '100%' }} />
+
             <FormControlLabel
-              control={<Checkbox value="allowAge" color="primary" />}
+              control={
+                <Checkbox
+                  name="allowAge"
+                  checked={agreements.allowAge}
+                  value="allowAge"
+                  color="primary"
+                  onChange={handleUpdateAgreement}
+                />
+              }
               label="만 14세 이상입니다. (필수)"
             />
             <FormControlLabel
-              control={<Checkbox value="allowPersonalInfo" color="primary" />}
+              control={
+                <Checkbox
+                  name="allowPrivacy"
+                  checked={agreements.allowPrivacy}
+                  value="allowPrivacy"
+                  color="primary"
+                  onChange={handleUpdateAgreement}
+                />
+              }
               label="개인정보 수집에 동의합니다. (필수)"
             />
           </Box>
 
-          <PrimaryButton>가입하기</PrimaryButton>
+          {/* 회원가입 버튼 */}
+          <PrimaryButton
+            isDisabled={
+              !isValid ||
+              !isIdAvailable ||
+              !isNicknameAvailable ||
+              !agreements.allowAge ||
+              !agreements.allowPrivacy
+            }
+          >
+            가입하기
+          </PrimaryButton>
+
+          {/* 소셜 로그인 버튼 영역 */}
           <div css={socialLoginContainerStyle}>
             <Divider sx={{ width: '100%' }}>
               <Typography variant="body2" color="#abb0b5">
