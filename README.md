@@ -1,7 +1,5 @@
 # yeogiya-frontend
 
-# yeogiya-frontend
-
 ## 프론트엔드 기술 스택
 - Language and Framework: React + Typescript
 - Libraries: emotion, material ui, storybook
@@ -29,4 +27,4 @@ gitmoji + 작업한 위치, 내용
     - tab 들여쓰기 통일
 - component
     - 대문자로 시작
-    - 함수형 컴포넌트 사용 (화살표 함수 X)
+    - 함수형 컴포넌트 사용 (화살표 함수 컴포넌트 X)
